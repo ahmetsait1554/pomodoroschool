@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '@/lib/auth';
 import { useTimer } from '@/lib/useTimer';
 import { supabase } from '@/lib/supabase';
 import { BACKGROUNDS, type ParticleEffectType } from '@/lib/constants';
+import { fetchCustomBackgrounds, type CustomBackground } from '@/lib/customBackgrounds';
 import AuthModal from '@/components/AuthModal';
 import TimerDisplay from '@/components/TimerDisplay';
 import ModeSelector from '@/components/ModeSelector';
@@ -34,6 +35,11 @@ function AppContent() {
   const [particleIntensity, setParticleIntensity] = useState(() =>
     parseFloat(localStorage.getItem('ps_particle_intensity') || '0.5')
   );
+  const [customBgs, setCustomBgs] = useState<CustomBackground[]>([]);
+
+  useEffect(() => {
+    fetchCustomBackgrounds().then(setCustomBgs);
+  }, []);
 
   const prefs = profile?.preferences;
   const timer = useTimer({
@@ -89,7 +95,8 @@ function AppContent() {
     prevRunningRef.current = timer.isRunning;
   }, [timer.isRunning, timer.secondsLeft]);
 
-  const bg = BACKGROUNDS.find((b) => b.id === bgId) || BACKGROUNDS[0];
+  const ALL_BACKGROUNDS = [...BACKGROUNDS, ...customBgs];
+  const bg = ALL_BACKGROUNDS.find((b) => b.id === bgId) || ALL_BACKGROUNDS[0];
 
   if (loading) {
     return (

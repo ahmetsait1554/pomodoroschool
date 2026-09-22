@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { BACKGROUNDS } from '@/lib/constants';
+import { fetchCustomBackgrounds, type CustomBackground } from '@/lib/customBackgrounds';
 
 type Props = {
   selected: string;
@@ -7,6 +9,14 @@ type Props = {
 };
 
 export default function BackgroundSelector({ selected, onSelect }: Props) {
+  const [customBgs, setCustomBgs] = useState<CustomBackground[]>([]);
+
+  useEffect(() => {
+    fetchCustomBackgrounds().then(setCustomBgs);
+  }, []);
+
+  const QUICK_BACKGROUNDS = [...BACKGROUNDS.slice(0, 5), ...customBgs.slice(0, 4)];
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
       <div className="mb-4 flex items-center gap-2">
@@ -14,7 +24,7 @@ export default function BackgroundSelector({ selected, onSelect }: Props) {
         <h3 className="text-sm font-semibold text-white">Atmosfer</h3>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        {BACKGROUNDS.map((bg) => (
+        {QUICK_BACKGROUNDS.map((bg) => (
           <button
             key={bg.id}
             onClick={() => onSelect(bg.id)}
