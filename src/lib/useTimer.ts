@@ -11,6 +11,7 @@ type TimerOptions = {
   autoStartPomodoros: boolean;
   soundEnabled: boolean;
   notificationEnabled: boolean;
+  onComplete?: (info: { mode: TimerMode; durationSeconds: number; taskTitle: string }) => void;
 };
 
 export type TimerState = {
@@ -29,6 +30,8 @@ export function useTimer(options: TimerOptions) {
   const [completedWorkSessions, setCompletedWorkSessions] = useState(0);
   const [currentTask, setCurrentTask] = useState('');
   const intervalRef = useRef<number | null>(null);
+  const currentTaskRef = useRef('');
+  currentTaskRef.current = currentTask;
 
   const totalSeconds = (mode === 'work' ? options.workDuration : mode === 'short_break' ? options.shortBreakDuration : options.longBreakDuration) * 60;
 
@@ -46,7 +49,14 @@ export function useTimer(options: TimerOptions) {
     if (options.soundEnabled) audioEngine.playChime();
     setIsRunning(false);
 
-    if (mode === 'work') {
+    const completedMode = mode;
+    const completedDuration = getDurationForMode(completedMode);
+    const taskTitle = currentTaskRef.current;
+    if (options.onComplete) {
+      options.onComplete({ mode: completedMode, durationSeconds: completedDuration, taskTitle });
+    }
+
+    if (completedMode === 'work') {
       const newCount = completedWorkSessions + 1;
       setCompletedWorkSessions(newCount);
       const nextMode: TimerMode = newCount % POMODORO_BEFORE_LONG_BREAK === 0 ? 'long_break' : 'short_break';

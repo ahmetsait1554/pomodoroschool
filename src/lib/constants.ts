@@ -18,7 +18,7 @@ export const MODE_GRADIENTS: Record<TimerMode, string> = {
   long_break: 'from-blue-500/20 to-cyan-500/5',
 };
 
-export type BackgroundCategory = 'nature' | 'urban' | 'cozy' | 'custom';
+export type BackgroundCategory = 'nature' | 'urban' | 'cozy' | 'pomodoro' | 'custom';
 
 export type BackgroundOption = {
   id: string;
@@ -32,6 +32,7 @@ export const BACKGROUND_CATEGORIES: { id: BackgroundCategory; name: string }[] =
   { id: 'nature', name: 'Doğa' },
   { id: 'urban', name: 'Şehir & Gece' },
   { id: 'cozy', name: 'İç Mekan' },
+  { id: 'pomodoro', name: 'Pomodoro' },
   { id: 'custom', name: 'Senin Görsellerin' },
 ];
 

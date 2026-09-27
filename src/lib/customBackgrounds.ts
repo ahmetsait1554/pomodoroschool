@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { BackgroundOption } from './constants';
+import type { BackgroundOption, BackgroundCategory } from './constants';
 
 export type CustomBackground = BackgroundOption & { storage_path: string };
 
@@ -18,7 +18,7 @@ export async function fetchCustomBackgrounds(): Promise<CustomBackground[]> {
       name: row.name,
       url: urlData.publicUrl,
       overlay: row.overlay,
-      category: 'custom' as const,
+      category: (row.category as BackgroundCategory) || 'custom',
       storage_path: row.storage_path,
     };
   });

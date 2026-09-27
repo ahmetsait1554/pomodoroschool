@@ -42,6 +42,19 @@ function AppContent() {
   }, []);
 
   const prefs = profile?.preferences;
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+
+  const handleSessionComplete = useCallback((info: { mode: string; durationSeconds: number; taskTitle: string }) => {
+    if (!sessionRef.current) return;
+    supabase.from('sessions').insert({
+      user_id: sessionRef.current.user.id,
+      mode: info.mode,
+      duration_seconds: info.durationSeconds,
+      task_title: info.taskTitle || null,
+    });
+  }, []);
+
   const timer = useTimer({
     workDuration: prefs?.workDuration ?? 25,
     shortBreakDuration: prefs?.shortBreakDuration ?? 5,
@@ -50,6 +63,7 @@ function AppContent() {
     autoStartPomodoros: prefs?.autoStartPomodoros ?? false,
     soundEnabled: prefs?.soundEnabled ?? true,
     notificationEnabled: prefs?.notificationEnabled ?? true,
+    onComplete: handleSessionComplete,
   });
 
   useEffect(() => {
@@ -75,25 +89,6 @@ function AppContent() {
     setParticleIntensity(v);
     localStorage.setItem('ps_particle_intensity', v.toString());
   }, []);
-
-  const recordSession = useCallback(async () => {
-    if (!session) return;
-    const duration = (timer.mode === 'work' ? prefs?.workDuration ?? 25 : timer.mode === 'short_break' ? prefs?.shortBreakDuration ?? 5 : prefs?.longBreakDuration ?? 15) * 60;
-    await supabase.from('sessions').insert({
-      user_id: session.user.id,
-      mode: timer.mode,
-      duration_seconds: duration,
-      task_title: timer.currentTask || null,
-    });
-  }, [session, timer.mode, timer.currentTask, prefs]);
-
-  const prevRunningRef = useRef(false);
-  useEffect(() => {
-    if (prevRunningRef.current && !timer.isRunning && timer.secondsLeft === 0) {
-      recordSession();
-    }
-    prevRunningRef.current = timer.isRunning;
-  }, [timer.isRunning, timer.secondsLeft]);
 
   const ALL_BACKGROUNDS = [...BACKGROUNDS, ...customBgs];
   const bg = ALL_BACKGROUNDS.find((b) => b.id === bgId) || ALL_BACKGROUNDS[0];
@@ -198,8 +193,8 @@ function AppContent() {
             <div className="mb-6 flex justify-center">
               <ModeSelector currentMode={timer.mode} onSwitch={timer.switchMode} />
             </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2 flex flex-col items-center justify-center">
+            <div className={`grid grid-cols-1 gap-6 lg:grid-cols-3 transition-all duration-500 ${timer.isRunning && timer.mode === 'work' ? 'lg:grid-cols-1' : ''}`}>
+              <div className={`flex flex-col items-center justify-center transition-all duration-500 ${timer.isRunning && timer.mode === 'work' ? 'min-h-[60vh]' : 'lg:col-span-2'}`}>
                 <TimerDisplay
                   mode={timer.mode}
                   secondsLeft={timer.secondsLeft}
@@ -217,23 +212,25 @@ function AppContent() {
                   </span>
                 </div>
               </div>
-              <div className="space-y-4">
-                <TaskPanel currentTask={timer.currentTask} onCurrentTaskChange={timer.setCurrentTask} />
-                <BackgroundSelector selected={bgId} onSelect={handleBgChange} />
-                <button
-                  onClick={() => setShowBgLibrary(true)}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-slate-300 backdrop-blur-md transition hover:bg-white/10 hover:text-white"
-                >
-                  <ImagePlus size={16} /> Arka Plan Kütüphanesi
-                </button>
-                <ParticleControls
-                  activeEffect={particleEffect}
-                  intensity={particleIntensity}
-                  onToggle={handleParticleToggle}
-                  onIntensityChange={handleIntensityChange}
-                />
-                <AmbientSoundPanel onOpenLibrary={() => setShowAudioLibrary(true)} />
-              </div>
+              {!(timer.isRunning && timer.mode === 'work') && (
+                <div className="space-y-4 animate-fade-in">
+                  <TaskPanel currentTask={timer.currentTask} onCurrentTaskChange={timer.setCurrentTask} />
+                  <BackgroundSelector selected={bgId} onSelect={handleBgChange} />
+                  <button
+                    onClick={() => setShowBgLibrary(true)}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-slate-300 backdrop-blur-md transition hover:bg-white/10 hover:text-white"
+                  >
+                    <ImagePlus size={16} /> Arka Plan Kütüphanesi
+                  </button>
+                  <ParticleControls
+                    activeEffect={particleEffect}
+                    intensity={particleIntensity}
+                    onToggle={handleParticleToggle}
+                    onIntensityChange={handleIntensityChange}
+                  />
+                  <AmbientSoundPanel onOpenLibrary={() => setShowAudioLibrary(true)} />
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -75,6 +75,9 @@ export type Room = {
   duration_seconds: number;
   max_members: number;
   created_at: string;
+  password_hash: string | null;
+  invite_code: string | null;
+  new_host_id: string | null;
 };
 
 export type RoomMember = {
@@ -83,4 +86,14 @@ export type RoomMember = {
   user_id: string;
   display_name: string;
   last_seen: string;
+  is_host: boolean;
+};
+
+export type RoomMessage = {
+  id: string;
+  room_id: string;
+  user_id: string;
+  display_name: string;
+  content: string;
+  created_at: string;
 };
