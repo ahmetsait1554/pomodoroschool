@@ -32,8 +32,8 @@ export const BACKGROUND_CATEGORIES: { id: BackgroundCategory; name: string }[] =
   { id: 'nature', name: 'Doğa' },
   { id: 'urban', name: 'Şehir & Gece' },
   { id: 'cozy', name: 'İç Mekan' },
-  { id: 'pomodoro', name: 'Pomodoro' },
-  { id: 'custom', name: 'Senin Görsellerin' },
+  { id: 'pomodoro', name: 'Lofi' },
+  { id: 'custom', name: 'Anime' },
 ];
 
 export const BACKGROUNDS: BackgroundOption[] = [
