@@ -49,7 +49,7 @@ export default function BackgroundLibrary({ selected, onSelect, onClose }: Props
           {category === 'custom' && customBgs.length > 0 && (
             <div className="mb-4 flex items-center gap-2 rounded-xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
               <Upload size={16} />
-              <span>Bu görseller geliştirici tarafından yüklenir ve tüm kullanıcılarda görünür.</span>
+              <span>Yeni görseller zaman içerisinde eklecektir.</span>
             </div>
           )}
 
