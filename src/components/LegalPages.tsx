@@ -204,7 +204,7 @@ function ContactContent() {
             </div>
             <div>
               <h3 className="font-semibold text-white">E-posta</h3>
-              <p className="text-sm text-slate-400">destek@pomodoroschool.app</p>
+              <p className="text-sm text-slate-400">pomodoroschool@ecolife.com</p>
             </div>
           </div>
           <p className="text-sm text-slate-400">En hızlı yanıt süresi: 48 saat içinde.</p>
