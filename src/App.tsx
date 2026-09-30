@@ -18,8 +18,16 @@ import CoworkingPanel from '@/components/CoworkingPanel';
 import SettingsModal from '@/components/SettingsModal';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import ParticleControls from '@/components/ParticleControls';
+import LegalPages, { type LegalPage } from '@/components/LegalPages';
+import Footer from '@/components/Footer';
 
 type View = 'focus' | 'stats' | 'rooms';
+
+function getLegalPageFromHash(): LegalPage {
+  const hash = window.location.hash.replace('#/', '').replace('#', '');
+  if (['kvkk', 'privacy', 'terms', 'contact'].includes(hash)) return hash as LegalPage;
+  return null;
+}
 
 function AppContent() {
   const { session, profile, loading, signOut } = useAuth();
@@ -36,10 +44,26 @@ function AppContent() {
     parseFloat(localStorage.getItem('ps_particle_intensity') || '0.5')
   );
   const [customBgs, setCustomBgs] = useState<CustomBackground[]>([]);
+  const [legalPage, setLegalPage] = useState<LegalPage>(() => getLegalPageFromHash());
 
   useEffect(() => {
     fetchCustomBackgrounds().then(setCustomBgs);
   }, []);
+
+  useEffect(() => {
+    const onHashChange = () => setLegalPage(getLegalPageFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  function openLegalPage(page: LegalPage) {
+    window.location.hash = `/${page}`;
+    setLegalPage(page);
+  }
+  function closeLegalPage() {
+    window.location.hash = '';
+    setLegalPage(null);
+  }
 
   const prefs = profile?.preferences;
   const sessionRef = useRef(session);
@@ -109,8 +133,9 @@ function AppContent() {
   if (!session) {
     return (
       <>
-        <LandingPage onAuth={() => setShowAuth(true)} bg={bg} />
+        <LandingPage onAuth={() => setShowAuth(true)} bg={bg} onLegalPage={openLegalPage} />
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        {legalPage && <LegalPages page={legalPage} onClose={closeLegalPage} />}
       </>
     );
   }
@@ -255,6 +280,8 @@ function AppContent() {
       {showAudioLibrary && (
         <AudioLibrary onClose={() => setShowAudioLibrary(false)} />
       )}
+      <Footer onLegalPage={openLegalPage} />
+      {legalPage && <LegalPages page={legalPage} onClose={closeLegalPage} />}
     </div>
   );
 }
@@ -273,7 +300,7 @@ function NavButton({ icon: Icon, label, active, onClick }: { icon: typeof Flame;
   );
 }
 
-function LandingPage({ onAuth, bg }: { onAuth: () => void; bg: typeof BACKGROUNDS[number] }) {
+function LandingPage({ onAuth, bg, onLegalPage }: { onAuth: () => void; bg: typeof BACKGROUNDS[number]; onLegalPage: (page: LegalPage) => void }) {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="fixed inset-0 -z-10">
@@ -314,6 +341,7 @@ function LandingPage({ onAuth, bg }: { onAuth: () => void; bg: typeof BACKGROUND
           ))}
         </div>
       </div>
+      <Footer onLegalPage={onLegalPage} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ type AuthContextValue = {
   loading: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updatePreferences: (prefs: Partial<ProfilePreferences>) => Promise<void>;
   updateDisplayName: (name: string) => Promise<void>;
@@ -94,6 +95,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }
 
+  async function signInWithGoogle() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'https://bolt.host' },
+    });
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     setProfile(null);
@@ -113,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signUp, signIn, signOut, updatePreferences, updateDisplayName }}>
+    <AuthContext.Provider value={{ session, profile, loading, signUp, signIn, signInWithGoogle, signOut, updatePreferences, updateDisplayName }}>
       {children}
     </AuthContext.Provider>
   );
