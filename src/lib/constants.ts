@@ -140,7 +140,7 @@ export const BACKGROUNDS: BackgroundOption[] = [
   },
 ];
 
-export type ParticleEffectType = 'rain' | 'snow' | 'leaves';
+export type ParticleEffectType = 'rain' | 'snow' | 'leaves'| 'lightning'  ;
 
 export type ParticleEffect = {
   id: ParticleEffectType;
