@@ -172,12 +172,12 @@ export type MusicTrack = {
 const RAW_BASE = 'https://raw.githubusercontent.com/ahmetsait1554/pomodoroschool/main';
 
 export const AMBIENT_SOUNDS: AmbientSound[] = [
+  { id: 'yagmur', name: 'Yağmur', icon: 'CloudRain', url: `${RAW_BASE}/ya%C4%9Fmur.mp3` },
   { id: 'birdvoice', name: 'Kuş Sesleri', icon: 'Bird', url: `${RAW_BASE}/birdvoice.mp3` },
   { id: 'city', name: 'Şehir', icon: 'Building2', url: `${RAW_BASE}/city.mp3` },
   { id: 'forest', name: 'Orman', icon: 'Trees', url: `${RAW_BASE}/forest.mp3` },
   { id: 'kahvehane', name: 'Kahvehane', icon: 'Coffee', url: `${RAW_BASE}/kahvehane.mp3` },
   { id: 'kamp_atesi', name: 'Kamp Ateşi', icon: 'Flame', url: `${RAW_BASE}/kamp%20ate%C5%9Fi.mp3` },
-  { id: 'yagmur', name: 'Yağmur', icon: 'CloudRain', url: `${RAW_BASE}/ya%C4%9Fmur.mp3` },
   { id: 'thunder', name: 'Gök Gürültüsü', icon: 'CloudLightning', url: `${RAW_BASE}/thunder.mp3` },
   { id: 'ruzgar', name: 'Rüzgar', icon: 'Wind', url: `${RAW_BASE}/r%C3%BCzgar.mp3` },
   { id: 'river', name: 'Akarsu', icon: 'Waves', url: `${RAW_BASE}/river.mp3` },
