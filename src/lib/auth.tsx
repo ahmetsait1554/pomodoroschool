@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(userId: string) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, display_name, avatar_url, preferences')
+      .select('id, display_name, avatar_url, preferences, is_premium')
       .eq('id', userId)
       .maybeSingle();
 
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
         .insert({ id: userId, display_name: 'Student', preferences: defaultPreferences })
-        .select('id, display_name, avatar_url, preferences')
+        .select('id, display_name, avatar_url, preferences, is_premium')
         .single();
 
       if (!insertError && newProfile) {

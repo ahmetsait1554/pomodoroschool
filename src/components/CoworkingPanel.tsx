@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Users, Plus, ArrowLeft, Crown, Radio, Lock, Share2, UserCog, Send, MessageCircle } from 'lucide-react';
+import { Users, Plus, ArrowLeft, Crown, Radio, Lock, Share2, UserCog, Send, MessageCircle, Trash2, Play, Pause, RotateCcw } from 'lucide-react';
 import { supabase, type Room, type RoomMember, type RoomMessage, type TimerMode } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { MODE_LABELS, MODE_COLORS } from '@/lib/constants';
+
+const MAX_MEMBERS = 30;
 
 export default function CoworkingPanel() {
   const { session, profile } = useAuth();
@@ -18,6 +20,8 @@ export default function CoworkingPanel() {
   const [passwordRoom, setPasswordRoom] = useState<Room | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [showJoinByCode, setShowJoinByCode] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [roomError, setRoomError] = useState<string | null>(null);
 
   const loadRooms = useCallback(async () => {
     const { data } = await supabase.from('rooms').select('*').order('created_at', { ascending: false });
@@ -38,6 +42,7 @@ export default function CoworkingPanel() {
         description: newDesc.trim() || null,
         host_id: session.user.id,
         password_hash: newPassword.trim() || null,
+        max_members: MAX_MEMBERS,
       })
       .select('*')
       .single();
@@ -53,10 +58,23 @@ export default function CoworkingPanel() {
 
   async function joinRoom(room: Room, password?: string) {
     if (!session || !profile) return;
+    setRoomError(null);
+
     if (room.password_hash && password !== room.password_hash) {
       setPasswordRoom(room);
       return;
     }
+
+    const { count } = await supabase
+      .from('room_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('room_id', room.id);
+
+    if (count !== null && count >= (room.max_members || MAX_MEMBERS)) {
+      setRoomError('Bu oda dolu (maksimum 30 kişi).');
+      return;
+    }
+
     await supabase.from('room_members').upsert({
       room_id: room.id,
       user_id: session.user.id,
@@ -71,11 +89,14 @@ export default function CoworkingPanel() {
 
   async function joinByCode() {
     if (!joinCode.trim() || !session) return;
+    setCodeError(null);
     const { data } = await supabase.from('rooms').select('*').eq('invite_code', joinCode.trim().toUpperCase()).maybeSingle();
     if (data) {
       joinRoom(data as Room);
       setJoinCode('');
       setShowJoinByCode(false);
+    } else {
+      setCodeError('Bu koda sahip oda bulunamadı.');
     }
   }
 
@@ -169,10 +190,13 @@ export default function CoworkingPanel() {
 
   async function deleteRoom() {
     if (!activeRoom || !session || session.user.id !== activeRoom.host_id) return;
+    await supabase.from('room_messages').delete().eq('room_id', activeRoom.id);
+    await supabase.from('room_members').delete().eq('room_id', activeRoom.id);
     await supabase.from('rooms').delete().eq('id', activeRoom.id);
     setActiveRoom(null);
     setMembers([]);
     setMessages([]);
+    loadRooms();
   }
 
   if (passwordRoom) {
@@ -191,6 +215,7 @@ export default function CoworkingPanel() {
             placeholder="Oda şifresi"
             className="mb-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50"
             onKeyDown={(e) => { if (e.key === 'Enter') joinRoom(passwordRoom, joinPassword); }}
+            autoFocus
           />
           <div className="flex gap-2">
             <button
@@ -253,6 +278,12 @@ export default function CoworkingPanel() {
         </div>
       </div>
 
+      {roomError && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-400">
+          {roomError}
+        </div>
+      )}
+
       {showJoinByCode && (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md space-y-3">
           <div className="flex gap-2">
@@ -264,6 +295,7 @@ export default function CoworkingPanel() {
               maxLength={6}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50"
               onKeyDown={(e) => { if (e.key === 'Enter') joinByCode(); }}
+              autoFocus
             />
             <button
               onClick={joinByCode}
@@ -272,6 +304,7 @@ export default function CoworkingPanel() {
               Katıl
             </button>
           </div>
+          {codeError && <p className="text-sm text-red-400">{codeError}</p>}
         </div>
       )}
 
@@ -283,6 +316,7 @@ export default function CoworkingPanel() {
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Oda adı (örn: Sabah Çalışması)"
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50"
+            autoFocus
           />
           <input
             type="text"
@@ -327,6 +361,7 @@ export default function CoworkingPanel() {
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-orange-400">{MODE_LABELS[room.current_mode]}</span>
               <span>· {Math.round(Number(room.duration_seconds) / 60)} dk</span>
+              <span>· {room.max_members || MAX_MEMBERS} kişi</span>
               {room.invite_code && <span className="rounded-full bg-white/5 px-2 py-0.5 text-slate-400">Kod: {room.invite_code}</span>}
             </div>
           </button>
@@ -358,7 +393,10 @@ function RoomView({ room, members, messages, isHost, isPendingHost, currentUserI
   const [msgInput, setMsgInput] = useState('');
   const [showTransfer, setShowTransfer] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [sending, setSending] = useState(false);
   const msgEndRef = useRef<HTMLDivElement>(null);
+  const msgInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -375,11 +413,29 @@ function RoomView({ room, members, messages, isHost, isPendingHost, currentUserI
   const remaining = Math.max(0, durationSec - elapsed);
   const m = Math.floor(remaining / 60).toString().padStart(2, '0');
   const s = (remaining % 60).toString().padStart(2, '0');
+  const isTimerRunning = startedAtMs > 0 && remaining > 0;
 
-  function handleSend() {
-    if (!msgInput.trim()) return;
+  async function handleSend() {
+    if (!msgInput.trim() || sending) return;
+    setSending(true);
     onSendMessage(msgInput);
     setMsgInput('');
+    setSending(false);
+    msgInputRef.current?.focus();
+  }
+
+  function startTimer() {
+    const dur = room.current_mode === 'work' ? 1500 : room.current_mode === 'short_break' ? 300 : 900;
+    onUpdateTimer(room.current_mode, new Date().toISOString(), dur);
+  }
+
+  function pauseTimer() {
+    onUpdateTimer(room.current_mode, null, remaining);
+  }
+
+  function resetTimer() {
+    const dur = room.current_mode === 'work' ? 1500 : room.current_mode === 'short_break' ? 300 : 900;
+    onUpdateTimer(room.current_mode, null, dur);
   }
 
   const shareUrl = `${window.location.origin}/?room=${room.invite_code || room.id}`;
@@ -401,14 +457,37 @@ function RoomView({ room, members, messages, isHost, isPendingHost, currentUserI
           )}
           {isHost && (
             <button
-              onClick={onDeleteRoom}
+              onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 transition hover:bg-red-500/20"
             >
-              Odayı Sil
+              <Trash2 size={14} /> Odayı Sil
             </button>
           )}
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-5 backdrop-blur-md">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-red-300">
+            <Trash2 size={16} /> Odayı Sil
+          </h3>
+          <p className="mb-4 text-sm text-slate-300">{room.name} odasını silmek istediğine emin misin? Tüm mesajlar ve üyeler kaldırılacak.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { onDeleteRoom(); setShowDeleteConfirm(false); }}
+              className="flex-1 rounded-xl bg-red-500/20 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/30"
+            >
+              Evet, Sil
+            </button>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
+            >
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
 
       {showShare && (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md space-y-3">
@@ -467,11 +546,11 @@ function RoomView({ room, members, messages, isHost, isPendingHost, currentUserI
 
         {isHost && (
           <>
-            <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+            <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 p-1">
               {modes.map((md) => (
                 <button
                   key={md}
-                  onClick={() => onUpdateTimer(md, new Date().toISOString(), md === 'work' ? 1500 : md === 'short_break' ? 300 : 900)}
+                  onClick={() => onUpdateTimer(md, null, md === 'work' ? 1500 : md === 'short_break' ? 300 : 900)}
                   className={`rounded-full px-5 py-2 text-sm font-medium transition ${
                     room.current_mode === md ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
                   }`}
@@ -479,6 +558,29 @@ function RoomView({ room, members, messages, isHost, isPendingHost, currentUserI
                   {MODE_LABELS[md]}
                 </button>
               ))}
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              {!isTimerRunning ? (
+                <button
+                  onClick={startTimer}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:shadow-lg hover:shadow-orange-500/30"
+                >
+                  <Play size={16} /> Başlat
+                </button>
+              ) : (
+                <button
+                  onClick={pauseTimer}
+                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  <Pause size={16} /> Duraklat
+                </button>
+              )}
+              <button
+                onClick={resetTimer}
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
+              >
+                <RotateCcw size={16} /> Sıfırla
+              </button>
             </div>
             <div className="mt-4">
               <button
@@ -522,7 +624,7 @@ function RoomView({ room, members, messages, isHost, isPendingHost, currentUserI
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-            <Users size={16} className="text-orange-400" /> Odadakiler ({members.length})
+            <Users size={16} className="text-orange-400" /> Odadakiler ({members.length}/{room.max_members || MAX_MEMBERS})
           </h3>
           <div className="space-y-2">
             {members.map((mem) => (
@@ -561,16 +663,19 @@ function RoomView({ room, members, messages, isHost, isPendingHost, currentUserI
           </div>
           <div className="mt-3 flex gap-2">
             <input
+              ref={msgInputRef}
               type="text"
               value={msgInput}
               onChange={(e) => setMsgInput(e.target.value)}
               placeholder="Mesaj yaz..."
               className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50"
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+              autoFocus
             />
             <button
               onClick={handleSend}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 text-orange-300 transition hover:bg-orange-500/30"
+              disabled={sending || !msgInput.trim()}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 text-orange-300 transition hover:bg-orange-500/30 disabled:opacity-50"
             >
               <Send size={16} />
             </button>

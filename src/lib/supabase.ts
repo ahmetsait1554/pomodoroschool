@@ -45,6 +45,7 @@ export type Profile = {
   display_name: string;
   avatar_url: string | null;
   preferences: ProfilePreferences;
+  is_premium: boolean;
 };
 
 export type Task = {
@@ -78,6 +79,7 @@ export type Room = {
   password_hash: string | null;
   invite_code: string | null;
   new_host_id: string | null;
+  max_members: number;
 };
 
 export type RoomMember = {

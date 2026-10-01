@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GraduationCap, BarChart3, Users, Settings, LogOut, Flame, ImagePlus, Music } from 'lucide-react';
+import { GraduationCap, BarChart3, Users, Settings, LogOut, Flame, ImagePlus, Music, User } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { useTimer } from '@/lib/useTimer';
 import { supabase } from '@/lib/supabase';
@@ -20,8 +20,9 @@ import ParticleCanvas from '@/components/ParticleCanvas';
 import ParticleControls from '@/components/ParticleControls';
 import LegalPages, { type LegalPage } from '@/components/LegalPages';
 import Footer from '@/components/Footer';
+import ProfilePanel from '@/components/ProfilePanel';
 
-type View = 'focus' | 'stats' | 'rooms';
+type View = 'focus' | 'stats' | 'rooms' | 'profile';
 
 function getLegalPageFromHash(): LegalPage {
   const hash = window.location.hash.replace('#/', '').replace('#', '');
@@ -167,6 +168,7 @@ function AppContent() {
             <NavButton icon={Flame} label="Odak" active={view === 'focus'} onClick={() => setView('focus')} />
             <NavButton icon={BarChart3} label="İstatistik" active={view === 'stats'} onClick={() => setView('stats')} />
             <NavButton icon={Users} label="Ortak Çalışma" active={view === 'rooms'} onClick={() => setView('rooms')} />
+            <NavButton icon={User} label="Profil" active={view === 'profile'} onClick={() => setView('profile')} />
           </nav>
 
           <div className="flex items-center gap-2">
@@ -207,8 +209,9 @@ function AppContent() {
 
         <nav className="flex items-center gap-1 px-4 pb-2 sm:hidden">
           <NavButton icon={Flame} label="Odak" active={view === 'focus'} onClick={() => setView('focus')} />
-          <NavButton icon={BarChart3} label="İstatistik" active={view === 'stats'} onClick={() => setView('stats')} />
+          <NavButton icon={BarChart3} label="İstat" active={view === 'stats'} onClick={() => setView('stats')} />
           <NavButton icon={Users} label="Ortak" active={view === 'rooms'} onClick={() => setView('rooms')} />
+          <NavButton icon={User} label="Profil" active={view === 'profile'} onClick={() => setView('profile')} />
         </nav>
       </header>
 
@@ -271,6 +274,12 @@ function AppContent() {
             <CoworkingPanel />
           </div>
         )}
+
+        {view === 'profile' && (
+          <div className="animate-fade-in">
+            <ProfilePanel />
+          </div>
+        )}
       </main>
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
@@ -280,7 +289,9 @@ function AppContent() {
       {showAudioLibrary && (
         <AudioLibrary onClose={() => setShowAudioLibrary(false)} />
       )}
-      <Footer onLegalPage={openLegalPage} />
+      {!(timer.isRunning && timer.mode === 'work' && view === 'focus') && (
+        <Footer onLegalPage={openLegalPage} />
+      )}
       {legalPage && <LegalPages page={legalPage} onClose={closeLegalPage} />}
     </div>
   );

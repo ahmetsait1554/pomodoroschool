@@ -1,14 +1,19 @@
 import { useEffect, useState, useMemo } from 'react';
-import { BarChart3, TrendingUp, Calendar, Clock, Flame } from 'lucide-react';
+import { BarChart3, TrendingUp, Calendar, Clock, Flame, Crown, Lock, Play } from 'lucide-react';
 import { supabase, type Session } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 
 type Range = 'day' | 'week' | 'month';
 
 export default function StatisticsPanel() {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [range, setRange] = useState<Range>('week');
+  const [adLoading, setAdLoading] = useState(false);
+  const [adCountdown, setAdCountdown] = useState(0);
+  const [adStep, setAdStep] = useState<'idle' | 'watching' | 'done'>('idle');
+
+  const isPremium = profile?.is_premium ?? false;
 
   useEffect(() => {
     if (!session) return;
@@ -59,12 +64,87 @@ export default function StatisticsPanel() {
 
   const maxCount = Math.max(1, ...stats.buckets.map((b) => b.count));
 
+  async function startAdDonation() {
+    setAdLoading(true);
+    setAdStep('watching');
+    setAdCountdown(15);
+
+    const interval = setInterval(() => {
+      setAdCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    setTimeout(async () => {
+      setAdStep('done');
+      setAdLoading(false);
+      if (session) {
+        await supabase.from('profiles').update({ is_premium: true }).eq('id', session.user.id);
+      }
+    }, 15000);
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BarChart3 size={22} className="text-orange-400" />
+            <h2 className="text-xl font-semibold text-white">İstatistiklerim</h2>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 backdrop-blur-md text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10">
+            <Lock size={28} className="text-amber-400" />
+          </div>
+          <h3 className="mb-2 text-lg font-bold text-white">Premium Özellik</h3>
+          <p className="mb-6 max-w-md mx-auto text-sm text-slate-400">
+            İstatistikler premium üyelere özel bir özelliktir. Reklam izleyerek ücretsiz premium üyelik kazanabilir ve tüm istatistiklere erişebilirsiniz.
+          </p>
+
+          {adStep === 'watching' ? (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border-2 border-orange-500/30">
+                <span className="text-2xl font-bold text-orange-400">{adCountdown}</span>
+              </div>
+              <p className="text-sm text-slate-300">Reklam izleniyor... Lütfen bekleyin.</p>
+              <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-1000" style={{ width: `${((15 - adCountdown) / 15) * 100}%` }} />
+              </div>
+            </div>
+          ) : adStep === 'done' ? (
+            <div className="flex items-center justify-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+              <Crown size={20} className="text-emerald-400" />
+              <p className="text-sm font-medium text-emerald-200">Premium üyeliğin aktif! Sayfayı yenileyin.</p>
+            </div>
+          ) : (
+            <button
+              onClick={startAdDonation}
+              disabled={adLoading}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-3 font-semibold text-white transition hover:shadow-lg hover:shadow-orange-500/30 disabled:opacity-50"
+            >
+              <Play size={18} /> Reklam İzle ve Premium Kazan
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 size={22} className="text-orange-400" />
           <h2 className="text-xl font-semibold text-white">İstatistiklerim</h2>
+          <span className="flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">
+            <Crown size={12} /> Premium
+          </span>
         </div>
         <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
           {(['day', 'week', 'month'] as Range[]).map((r) => (
