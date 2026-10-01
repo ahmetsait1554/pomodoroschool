@@ -140,7 +140,7 @@ export const BACKGROUNDS: BackgroundOption[] = [
   },
 ];
 
-export type ParticleEffectType = 'rain' | 'snow' | 'leaves'| 'lightning'  ;
+export type ParticleEffectType = 'rain' | 'snow' | 'leaves' ;
 
 export type ParticleEffect = {
   id: ParticleEffectType;
@@ -152,7 +152,6 @@ export const PARTICLE_EFFECTS: ParticleEffect[] = [
   { id: 'rain', name: 'Yağmur', icon: 'CloudRain' },
   { id: 'snow', name: 'Kar', icon: 'Snowflake' },
   { id: 'leaves', name: 'Yapraklar', icon: 'Leaf' },
-   id: 'lightning', name: 'Şimşek', icon: 'Flash' },
 ];
 
 export type AmbientSound = {
