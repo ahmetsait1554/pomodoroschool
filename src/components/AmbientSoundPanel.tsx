@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CloudRain, Wind, Flame, Waves, Droplets, Radio, Volume2, Library } from 'lucide-react';
+import { Bird, Building2, Trees, Coffee, Flame, CloudRain, CloudLightning, Wind, Waves, Droplets, Tent, Volume2, Library } from 'lucide-react';
 import { AMBIENT_SOUNDS } from '@/lib/constants';
 import { audioEngine } from '@/lib/audio';
 
@@ -8,7 +8,7 @@ type Props = {
 };
 
 const ICON_MAP: Record<string, typeof CloudRain> = {
-  CloudRain, Wind, Flame, Waves, Droplets, Radio,
+  Bird, Building2, Trees, Coffee, Flame, CloudRain, CloudLightning, Wind, Waves, Droplets, Tent,
 };
 
 export default function AmbientSoundPanel({ onOpenLibrary }: Props) {

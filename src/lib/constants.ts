@@ -158,8 +158,7 @@ export type AmbientSound = {
   id: string;
   name: string;
   icon: string;
-  type: 'noise' | 'oscillator';
-  params: Record<string, number>;
+  url: string;
 };
 
 export type MusicTrack = {
@@ -170,19 +169,24 @@ export type MusicTrack = {
   duration: string;
 };
 
+const RAW_BASE = 'https://raw.githubusercontent.com/ahmetsait1554/pomodoroschool/main';
+
 export const AMBIENT_SOUNDS: AmbientSound[] = [
-  { id: 'rain', name: 'Yağmur', icon: 'CloudRain', type: 'noise', params: { filterFreq: 1800, q: 0.5 } },
-  { id: 'wind', name: 'Rüzgar', icon: 'Wind', type: 'noise', params: { filterFreq: 600, q: 0.3 } },
-  { id: 'thunder', name: 'Gök Gürültüsü', icon: 'CloudLightning', type: 'noise', params: { filterFreq: 300, q: 0.1 } },
-  { id: 'fire', name: 'Şömine', icon: 'Flame', type: 'noise', params: { filterFreq: 800, q: 0.2 } },
-  { id: 'stream', name: 'Akarsu', icon: 'Waves', type: 'noise', params: { filterFreq: 2500, q: 0.4 } },
-  { id: 'ocean_waves', name: 'Dalga', icon: 'Droplets', type: 'noise', params: { filterFreq: 1200, q: 0.6 } },
-  { id: 'coffee_shop', name: 'Kahvehane', icon: 'Coffee', type: 'noise', params: { filterFreq: 1000, q: 0.8 } },
-  { id: 'brown_noise', name: 'Kahverengi Gürültü', icon: 'Radio', type: 'noise', params: { filterFreq: 400, q: 0.2 } },
+  { id: 'birdvoice', name: 'Kuş Sesleri', icon: 'Bird', url: `${RAW_BASE}/birdvoice.mp3` },
+  { id: 'city', name: 'Şehir', icon: 'Building2', url: `${RAW_BASE}/city.mp3` },
+  { id: 'forest', name: 'Orman', icon: 'Trees', url: `${RAW_BASE}/forest.mp3` },
+  { id: 'kahvehane', name: 'Kahvehane', icon: 'Coffee', url: `${RAW_BASE}/kahvehane.mp3` },
+  { id: 'kamp_atesi', name: 'Kamp Ateşi', icon: 'Flame', url: `${RAW_BASE}/kamp%20ate%C5%9Fi.mp3` },
+  { id: 'yagmur', name: 'Yağmur', icon: 'CloudRain', url: `${RAW_BASE}/ya%C4%9Fmur.mp3` },
+  { id: 'thunder', name: 'Gök Gürültüsü', icon: 'CloudLightning', url: `${RAW_BASE}/thunder.mp3` },
+  { id: 'ruzgar', name: 'Rüzgar', icon: 'Wind', url: `${RAW_BASE}/r%C3%BCzgar.mp3` },
+  { id: 'river', name: 'Akarsu', icon: 'Waves', url: `${RAW_BASE}/river.mp3` },
+  { id: 'power_water', name: 'Şelale', icon: 'Droplets', url: `${RAW_BASE}/power%20water.mp3` },
+  { id: 'power_kamp_atesi', name: 'Büyük Kamp Ateşi', icon: 'Tent', url: `${RAW_BASE}/power%20kamp%20ate%C5%9F.mp3` },
 ];
 
 export const MUSIC_TRACKS: MusicTrack[] = [
-  { id: 'lofi1', name: 'Lo-Fi Beat', artist: 'Pixabay', url: 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3', duration: '3:12' },
+  { id: 'Büyük kamp ateşi', name: 'ateş', artist: 'unknown', url: 'https://github.com/ahmetsait1554/pomodoroschool/blob/aae014c21edd0f28fdfef96a171177b8e7c3e52f/power%20kamp%20ate%C5%9F.mp3', duration: '3:12' },
   { id: 'lofi2', name: 'Sakin Piyano', artist: 'Pixabay', url: 'https://cdn.pixabay.com/audio/2022/03/15/audio_8e6a30c3e4.mp3', duration: '4:05' },
   { id: 'lofi3', name: 'Gece Düşleri', artist: 'Pixabay', url: 'https://cdn.pixabay.com/audio/2022/11/22/audio_febc50a614.mp3', duration: '2:48' },
   { id: 'lofi4', name: 'Yağmurlu Gün', artist: 'Pixabay', url: 'https://cdn.pixabay.com/audio/2023/01/30/audio_9b6e1d9e3f.mp3', duration: '3:30' },

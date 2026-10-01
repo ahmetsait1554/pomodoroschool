@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { X, CloudRain, Wind, CloudLightning, Flame, Waves, Droplets, Coffee, Radio, Music, Volume2, Play, Square } from 'lucide-react';
+import { X, Bird, Building2, Trees, Coffee, Flame, CloudRain, CloudLightning, Wind, Waves, Droplets, Tent, Music, Volume2, Play, Square } from 'lucide-react';
 import { AMBIENT_SOUNDS, MUSIC_TRACKS } from '@/lib/constants';
 import { audioEngine } from '@/lib/audio';
 
 type Props = { onClose: () => void };
 
 const ICON_MAP: Record<string, typeof CloudRain> = {
-  CloudRain, Wind, CloudLightning, Flame, Waves, Droplets, Coffee, Radio,
+  Bird, Building2, Trees, Coffee, Flame, CloudRain, CloudLightning, Wind, Waves, Droplets, Tent,
 };
 
 export default function AudioLibrary({ onClose }: Props) {

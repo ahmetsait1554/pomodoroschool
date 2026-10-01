@@ -1,9 +1,9 @@
 import { AMBIENT_SOUNDS } from './constants';
 
 type ActiveSound = {
-  source: AudioBufferSourceNode;
+  audio: HTMLAudioElement;
   gain: GainNode;
-  filter: BiquadFilterNode;
+  mediaSource: MediaElementAudioSourceNode;
 };
 
 type ActiveMusic = {
@@ -14,7 +14,6 @@ type ActiveMusic = {
 
 class AudioEngine {
   private ctx: AudioContext | null = null;
-  private noiseBuffer: AudioBuffer | null = null;
   private activeSounds: Map<string, ActiveSound> = new Map();
   private activeMusic: Map<string, ActiveMusic> = new Map();
   private masterGain: GainNode | null = null;
@@ -32,19 +31,6 @@ class AudioEngine {
     return this.ctx;
   }
 
-  private generateNoiseBuffer(ctx: AudioContext): AudioBuffer {
-    const bufferSize = ctx.sampleRate * 4;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    let lastOut = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + 0.02 * white) / 1.02;
-      data[i] = lastOut * 3.5;
-    }
-    return buffer;
-  }
-
   playSound(soundId: string, volume: number): void {
     const sound = AMBIENT_SOUNDS.find((s) => s.id === soundId);
     if (!sound) return;
@@ -55,37 +41,25 @@ class AudioEngine {
     }
 
     const ctx = this.ensureContext();
-    if (!this.noiseBuffer) {
-      this.noiseBuffer = this.generateNoiseBuffer(ctx);
-    }
-
-    const source = ctx.createBufferSource();
-    source.buffer = this.noiseBuffer;
-    source.loop = true;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = sound.params.filterFreq;
-    filter.Q.value = sound.params.q;
-
+    const audio = new Audio(sound.url);
+    audio.loop = true;
+    audio.crossOrigin = 'anonymous';
+    const mediaSource = ctx.createMediaElementSource(audio);
     const gain = ctx.createGain();
     gain.gain.value = volume;
-
-    source.connect(filter);
-    filter.connect(gain);
+    mediaSource.connect(gain);
     gain.connect(this.masterGain!);
-    source.start();
-
-    this.activeSounds.set(soundId, { source, gain, filter });
+    audio.play().catch(() => {});
+    this.activeSounds.set(soundId, { audio, gain, mediaSource });
   }
 
   stopSound(soundId: string): void {
     const active = this.activeSounds.get(soundId);
     if (!active) return;
-    active.source.stop();
-    active.source.disconnect();
-    active.filter.disconnect();
+    active.audio.pause();
+    active.audio.src = '';
     active.gain.disconnect();
+    active.mediaSource.disconnect();
     this.activeSounds.delete(soundId);
   }
 
