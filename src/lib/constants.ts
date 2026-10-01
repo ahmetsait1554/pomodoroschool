@@ -152,6 +152,7 @@ export const PARTICLE_EFFECTS: ParticleEffect[] = [
   { id: 'rain', name: 'Yağmur', icon: 'CloudRain' },
   { id: 'snow', name: 'Kar', icon: 'Snowflake' },
   { id: 'leaves', name: 'Yapraklar', icon: 'Leaf' },
+   id: 'lightning', name: 'Şimşek', icon: 'Flash' },
 ];
 
 export type AmbientSound = {
